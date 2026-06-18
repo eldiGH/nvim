@@ -99,7 +99,7 @@ do
   vim.g.maplocalleader = ' '
 
   -- Set to true if you have a Nerd Font installed and selected in the terminal
-  vim.g.have_nerd_font = false
+  vim.g.have_nerd_font = true
 
   -- [[ Setting options ]]
   --  See `:help vim.o`
@@ -110,7 +110,7 @@ do
   vim.o.number = true
   -- You can also add relative line numbers, to help with jumping.
   --  Experiment for yourself to see if you like it!
-  -- vim.o.relativenumber = true
+  vim.o.relativenumber = true
 
   -- Enable mouse mode, can be useful for resizing splits for example!
   vim.o.mouse = 'a'
@@ -166,6 +166,12 @@ do
 
   -- Minimal number of screen lines to keep above and below the cursor.
   vim.o.scrolloff = 10
+
+  -- In diff mode, fill the "phantom" lines (where one side has no matching
+  -- content) with diagonal slashes. The DiffDelete override in the tokyonight
+  -- setup dims them so they read as subtle diagonal lines (like the diffview
+  -- screenshots), not loud glyphs. Affects all diffs: gitsigns, :diffsplit, diffview.
+  vim.opt.fillchars:append("diff:╱")
 
   -- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
   -- instead raise a dialog asking if you wish to save the current file(s)
@@ -251,6 +257,16 @@ do
     group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
     callback = function() vim.hl.on_yank() end,
   })
+
+  -- Move line / selection up and down (Alt+j/k or Alt+arrows)
+  vim.keymap.set('n', '<A-Up>', ':m .-2<CR>==', { silent = true })
+  vim.keymap.set('n', '<A-k>', ':m .-2<CR>==', { silent = true })
+  vim.keymap.set('n', '<A-Down>', ':m .+1<CR>==', { silent = true })
+  vim.keymap.set('n', '<A-j>', ':m .+1<CR>==', { silent = true })
+  vim.keymap.set('v', '<A-Up>', ":m '<-2<CR>gv=gv", { silent = true })
+  vim.keymap.set('v', '<A-k>', ":m '<-2<CR>gv=gv", { silent = true })
+  vim.keymap.set('v', '<A-Down>', ":m '>+1<CR>gv=gv", { silent = true })
+  vim.keymap.set('v', '<A-j>', ":m '>+1<CR>gv=gv", { silent = true })
 end
 
 -- ============================================================
@@ -352,12 +368,14 @@ do
   -- Adds git related signs to the gutter, as well as utilities for managing changes
   vim.pack.add { gh 'lewis6991/gitsigns.nvim' }
   require('gitsigns').setup {
+    -- Use a thin vertical bar for the gutter signs (colored green/red/etc by
+    -- gitsigns' highlight groups) instead of +/~/_ characters.
     signs = {
-      add = { text = '+' }, ---@diagnostic disable-line: missing-fields
-      change = { text = '~' }, ---@diagnostic disable-line: missing-fields
-      delete = { text = '_' }, ---@diagnostic disable-line: missing-fields
-      topdelete = { text = '‾' }, ---@diagnostic disable-line: missing-fields
-      changedelete = { text = '~' }, ---@diagnostic disable-line: missing-fields
+      add = { text = '▎' }, ---@diagnostic disable-line: missing-fields
+      change = { text = '▎' }, ---@diagnostic disable-line: missing-fields
+      delete = { text = '▎' }, ---@diagnostic disable-line: missing-fields
+      topdelete = { text = '▎' }, ---@diagnostic disable-line: missing-fields
+      changedelete = { text = '▎' }, ---@diagnostic disable-line: missing-fields
     },
   }
 
@@ -388,16 +406,45 @@ do
     styles = {
       comments = { italic = false }, -- Disable italics in comments
     },
+    -- Dim the diff filler glyphs (the `╱` set via fillchars) so empty regions in
+    -- a diff read as subtle diagonal lines instead of tokyonight's loud red.
+    on_highlights = function(hl, c)
+      hl.DiffDelete = { fg = c.fg_gutter, bg = 'NONE' }
+    end,
+  }
+
+  -- Catppuccin — one plugin that registers the catppuccin-mocha / -macchiato /
+  -- -frappe / -latte colorschemes (mocha is the dark one in the diffview screenshots).
+  -- We pass `name = 'catppuccin'` because the repo is `catppuccin/nvim`, which would
+  -- otherwise install into a confusingly-named `nvim` folder.
+  vim.pack.add { { src = 'https://github.com/catppuccin/nvim', name = 'catppuccin' } }
+  require('catppuccin').setup {
+    flavour = 'mocha',
+    -- Enable the diffview integration so catppuccin defines the DiffviewDiff*
+    -- highlight groups that the diffview hook below relies on.
+    integrations = { diffview = true },
+    custom_highlights = function(colors)
+      return {
+        -- Gray diagonal filler for NATIVE diff (gitsigns / :diffsplit). Diffview's
+        -- own diff colors are forced in lua/kickstart/plugins/diffview.lua, because
+        -- catppuccin's diffview integration overrides them if set here.
+        DiffDelete = { fg = colors.surface2, bg = 'NONE' },
+      }
+    end,
   }
 
   -- Load the colorscheme here.
   -- Like many other themes, this one has different styles, and you could load
   -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-  vim.cmd.colorscheme 'tokyonight-night'
+  -- (Defaulting to catppuccin-mocha now; use <leader>tc to try others live.)
+  vim.cmd.colorscheme 'catppuccin-mocha'
 
   -- Highlight todo, notes, etc in comments
   vim.pack.add { gh 'folke/todo-comments.nvim' }
   require('todo-comments').setup { signs = false }
+
+  -- vim-be-good: motion-drill games inside Neovim. No setup() needed; run :VimBeGood
+  vim.pack.add { gh 'ThePrimeagen/vim-be-good' }
 
   -- [[ mini.nvim ]]
   --  A collection of various small independent plugins/modules
@@ -515,6 +562,10 @@ do
   vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
   vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
   vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
+  -- Browse colorschemes with LIVE preview: scroll the list and each theme applies
+  -- instantly; <CR> keeps it, <Esc> reverts. (Selection lasts only this session —
+  -- to make a theme permanent, change the `vim.cmd.colorscheme` line below.)
+  vim.keymap.set('n', '<leader>tc', function() builtin.colorscheme { enable_preview = true } end, { desc = '[T]heme: pick [C]olorscheme (live preview)' })
   vim.keymap.set({ 'n', 'v' }, '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
   vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
   vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
@@ -695,7 +746,13 @@ do
     -- clangd = {},
     -- gopls = {},
     -- pyright = {},
-    -- rust_analyzer = {},
+    rust_analyzer = {
+      settings = {
+        ['rust-analyzer'] = {
+          check = { command = 'clippy' },
+        },
+      },
+    },
     --
     -- Some languages (like typescript) have entire language plugins that can be useful:
     --    https://github.com/pmizio/typescript-tools.nvim
@@ -966,12 +1023,13 @@ do
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug'
-  -- require 'kickstart.plugins.indent_line'
-  -- require 'kickstart.plugins.lint'
-  -- require 'kickstart.plugins.autopairs'
-  -- require 'kickstart.plugins.neo-tree'
-  -- require 'kickstart.plugins.gitsigns' -- adds gitsigns recommended keymaps
+  require 'kickstart.plugins.debug'
+  require 'kickstart.plugins.indent_line'
+  require 'kickstart.plugins.lint'
+  require 'kickstart.plugins.autopairs'
+  require 'kickstart.plugins.neo-tree'
+  require 'kickstart.plugins.gitsigns' -- adds gitsigns recommended keymaps
+  require 'kickstart.plugins.diffview' -- side-by-side, syntax-highlighted change review
 
   -- NOTE: You can add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --

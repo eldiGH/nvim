@@ -906,7 +906,13 @@ do
   -- NOTE: You can also specify plugin using a version range for its git tag.
   --  See `:help vim.version.range()` for more info
   vim.pack.add { { src = gh 'L3MON4D3/LuaSnip', version = vim.version.range '2.*' } }
-  require('luasnip').setup {}
+  require('luasnip').setup {
+    -- Exit the snippet session as soon as the cursor leaves the snippet's region,
+    -- so a later <Tab> indents instead of jumping back to a stale tabstop.
+    region_check_events = 'CursorMoved,CursorMovedI',
+    -- If you delete the text a snippet inserted, tear the session down too.
+    delete_check_events = 'TextChanged',
+  }
 
   -- `friendly-snippets` contains a variety of premade snippets.
   --    See the README about individual language/framework/plugin snippets:

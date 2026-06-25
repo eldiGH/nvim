@@ -445,11 +445,30 @@ do
     end,
   }
 
+  vim.pack.add { gh 'navarasu/onedark.nvim' }
+  -- One Dark — matches Ghostty's default #282c34 background and its muted,
+  -- Tomorrow-Night-style accent colors. Registered alongside the others (NOT made
+  -- default below), so you can preview it live with <leader>tc and compare against
+  -- catppuccin/tokyonight before committing. To make it permanent, change the
+  -- `vim.cmd.colorscheme` line below to 'onedark'.
+  require('onedark').setup {
+    style = 'dark', -- exact #282c34 bg. Other styles: 'darker', 'cool', 'deep', 'warm', 'warmer'.
+    highlights = {
+      -- Function parameters: calm fg color, but italic for a subtle distinction
+      -- (instead of a loud accent). Drop `fmt` for plain text; change `fg` for an accent.
+      ['@variable.parameter'] = { fg = '$fg', fmt = 'italic' }, -- treesitter capture
+      ['@lsp.type.parameter'] = { fg = '$fg', fmt = 'italic' }, -- rust-analyzer semantic token (wins over treesitter)
+      -- Struct fields / properties (foo.bar, `Foo { bar = .. }`): default cyan -> fg.
+      ['@variable.member'] = { fg = '$fg' }, -- treesitter capture (priority 100)
+      ['@lsp.type.property'] = { fg = '$fg' }, -- rust-analyzer semantic token (priority 125, the one coloring it cyan)
+    },
+  }
+
   -- Load the colorscheme here.
   -- Like many other themes, this one has different styles, and you could load
   -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-  -- (Defaulting to catppuccin-mocha now; use <leader>tc to try others live.)
-  vim.cmd.colorscheme 'catppuccin-mocha'
+  -- (Defaulting to onedark now; use <leader>tc to try others live.)
+  vim.cmd.colorscheme 'onedark'
 
   -- Highlight todo, notes, etc in comments
   vim.pack.add { gh 'folke/todo-comments.nvim' }

@@ -11,6 +11,9 @@ vim.keymap.set('n', '\\', '<Cmd>Neotree reveal<CR>', { desc = 'NeoTree reveal', 
 
 require('neo-tree').setup {
   filesystem = {
+    -- Don't auto-open the tree when starting nvim on a directory.
+    -- The tree is hidden by default and opens on demand with `\`.
+    hijack_netrw_behavior = 'disabled',
     window = {
       mappings = {
         ['\\'] = 'close_window',

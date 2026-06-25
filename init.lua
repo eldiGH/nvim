@@ -379,6 +379,17 @@ do
     },
   }
 
+  vim.pack.add { gh 'tpope/vim-fugitive' }
+  -- Fugitive (git operations) under the <leader>g "Git" menu, alongside diffview's gd/gh.
+  vim.keymap.set('n', '<leader>gs', '<Cmd>Git<CR>', { desc = '[G]it [S]tatus (fugitive hub)' })
+  vim.keymap.set('n', '<leader>gb', '<Cmd>Git blame<CR>', { desc = '[G]it [B]lame' })
+  vim.keymap.set('n', '<leader>gc', '<Cmd>Git commit<CR>', { desc = '[G]it [C]ommit' })
+  vim.keymap.set('n', '<leader>gp', '<Cmd>Git push<CR>', { desc = '[G]it [P]ush' })
+  vim.keymap.set('n', '<leader>gl', '<Cmd>Git pull<CR>', { desc = '[G]it pu[L]l' })
+  vim.keymap.set('n', '<leader>gf', '<Cmd>Git fetch<CR>', { desc = '[G]it [F]etch' })
+  vim.keymap.set('n', '<leader>gB', '<Cmd>Telescope git_branches<CR>', { desc = '[G]it [B]ranches (switch)' })
+  vim.keymap.set('n', '<leader>gz', '<Cmd>Telescope git_stash<CR>', { desc = '[G]it stash' })
+
   -- Useful plugin to show you pending keybinds.
   vim.pack.add { gh 'folke/which-key.nvim' }
   require('which-key').setup {
@@ -390,6 +401,7 @@ do
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
       { '<leader>t', group = '[T]oggle' },
       { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
+      { '<leader>g', group = '[G]it' },
       { 'gr', group = 'LSP Actions', mode = { 'n' } },
     },
   }

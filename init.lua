@@ -1068,6 +1068,7 @@ do
   require 'kickstart.plugins.gitsigns' -- adds gitsigns recommended keymaps
   require 'kickstart.plugins.diffview' -- side-by-side, syntax-highlighted change review
   require 'kickstart.plugins.treesitter-context' -- "sticky scroll": pin the enclosing fn/scope to the top
+  require 'kickstart.plugins.starter' -- welcome screen (mini.starter) + disable netrw
 
   -- NOTE: You can add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --

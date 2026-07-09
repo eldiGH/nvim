@@ -402,6 +402,7 @@ do
       { '<leader>t', group = '[T]oggle' },
       { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
       { '<leader>g', group = '[G]it' },
+      { '<leader>D', group = '[D]atabase' },
       { 'gr', group = 'LSP Actions', mode = { 'n' } },
     },
   }
@@ -967,6 +968,16 @@ do
 
     sources = {
       default = { 'lsp', 'path', 'snippets' },
+      -- In SQL buffers, complete tables/columns from the connected database
+      -- via vim-dadbod-completion (see lua/kickstart/plugins/dadbod.lua)
+      per_filetype = {
+        sql = { 'dadbod', 'snippets', 'buffer' },
+        mysql = { 'dadbod', 'snippets', 'buffer' },
+        plsql = { 'dadbod', 'snippets', 'buffer' },
+      },
+      providers = {
+        dadbod = { name = 'Dadbod', module = 'vim_dadbod_completion.blink' },
+      },
     },
 
     snippets = { preset = 'luasnip' },
@@ -1071,6 +1082,7 @@ do
   require 'kickstart.plugins.treesitter-context' -- "sticky scroll": pin the enclosing fn/scope to the top
   require 'kickstart.plugins.starter' -- welcome screen (mini.starter) + disable netrw
   require 'kickstart.plugins.rainbow-delimiters' -- subtle color-matched brackets
+  require 'kickstart.plugins.dadbod' -- database client (vim-dadbod + UI + completion)
 
   -- NOTE: You can add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --

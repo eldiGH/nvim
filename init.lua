@@ -771,6 +771,36 @@ do
     end,
   })
 
+  -- Read `rust-analyzer.*` keys out of a project's .vscode/settings.json and turn
+  -- the flat dotted keys ("rust-analyzer.check.allTargets") into the nested table
+  -- rust-analyzer expects ({ check = { allTargets = ... } }). Lets nvim reuse the
+  -- same portable project config VSCode uses (e.g. multi-workspace linkedProjects),
+  -- instead of hard-coding per-project settings into this global config.
+  local function vscode_rust_analyzer_settings(root)
+    local file = io.open(root .. '/.vscode/settings.json', 'r')
+    if not file then return nil end
+    local raw = file:read '*a'
+    file:close()
+    -- minimal JSONC tolerance: strip // and /* */ comments and trailing commas
+    raw = raw:gsub('/%*.-%*/', ''):gsub('//[^\n]*', ''):gsub(',(%s*[}%]])', '%1')
+    local ok, decoded = pcall(vim.json.decode, raw)
+    if not ok or type(decoded) ~= 'table' then return nil end
+    local settings = {}
+    for key, value in pairs(decoded) do
+      local dotted = key:match '^rust%-analyzer%.(.+)$'
+      if dotted then
+        local node = settings
+        local parts = vim.split(dotted, '.', { plain = true })
+        for i = 1, #parts - 1 do
+          node[parts[i]] = node[parts[i]] or {}
+          node = node[parts[i]]
+        end
+        node[parts[#parts]] = value
+      end
+    end
+    return next(settings) and settings or nil
+  end
+
   -- Enable the following language servers
   --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
   --  See `:help lsp-config` for information about keys and how to configure
@@ -785,6 +815,18 @@ do
           check = { command = 'clippy' },
         },
       },
+      -- Merge project-local .vscode settings just before the LSP starts, using the
+      -- resolved workspace root. `linkedProjects` must be present at `initialize`
+      -- time (rust-analyzer decides which Cargo workspaces to load once, up front),
+      -- so we also mirror the merged table into init_options.
+      before_init = function(params, config)
+        local root = params.rootUri and vim.uri_to_fname(params.rootUri) or params.rootPath
+        local vscode = root and vscode_rust_analyzer_settings(root)
+        if not vscode then return end
+        config.settings['rust-analyzer'] = vim.tbl_deep_extend('force', config.settings['rust-analyzer'] or {}, vscode)
+        config.init_options = vim.tbl_deep_extend('force', config.init_options or {}, config.settings['rust-analyzer'])
+        params.initializationOptions = config.init_options
+      end,
     },
     --
     -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -850,6 +892,7 @@ do
   local ensure_installed = vim.tbl_keys(servers or {})
   vim.list_extend(ensure_installed, {
     -- You can add other tools here that you want Mason to install
+    'sql-formatter',
   })
 
   require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -892,6 +935,7 @@ do
       --
       -- You can use 'stop_after_first' to run the first available formatter from the list
       -- javascript = { "prettierd", "prettier", stop_after_first = true },
+      sql = { 'sql_formatter' },
     },
   }
 

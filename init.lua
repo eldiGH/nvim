@@ -892,8 +892,11 @@ do
   local ensure_installed = vim.tbl_keys(servers or {})
   vim.list_extend(ensure_installed, {
     -- You can add other tools here that you want Mason to install
-    'sql-formatter',
+    'rumdl', -- Markdown linter for nvim-lint (lua/kickstart/plugins/lint.lua); single binary, no Node
   })
+  -- npm packages only where Node is - Node is not installed everywhere (servers),
+  -- and without it Mason would fail on every start. Elsewhere the tool is just absent.
+  if vim.fn.executable 'npm' == 1 then table.insert(ensure_installed, 'sql-formatter') end
 
   require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 

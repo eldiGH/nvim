@@ -39,11 +39,9 @@ require('mason-nvim-dap').setup {
 
   -- You'll need to check that you have the required things installed
   -- online, please don't ask me how to install them :)
-  ensure_installed = {
-    -- Update this to ensure that you have the debuggers for the langs you want
-    'delve',
-    'codelldb',
-  },
+  -- Update this to ensure that you have the debuggers for the langs you want.
+  -- delve is built with `go install`, so only where Go is (not on servers).
+  ensure_installed = vim.fn.executable 'go' == 1 and { 'delve', 'codelldb' } or { 'codelldb' },
 }
 
 -- Dap UI setup
